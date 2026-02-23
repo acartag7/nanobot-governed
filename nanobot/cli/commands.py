@@ -302,6 +302,18 @@ def gateway(
     cron_store_path = get_data_dir() / "cron" / "jobs.json"
     cron = CronService(cron_store_path)
     
+    # Build edictum governance config if enabled
+    edictum_config = None
+    if config.edictum.enabled:
+        edictum_config = {
+            "mode": config.edictum.mode,
+            "template": config.edictum.template,
+            "contract_path": config.edictum.contract_path,
+            "server_url": config.edictum.server_url,
+            "api_key": config.edictum.api_key,
+            "agent_id": config.edictum.agent_id,
+        }
+
     # Create agent with cron service
     agent = AgentLoop(
         bus=bus,
@@ -319,6 +331,7 @@ def gateway(
         session_manager=session_manager,
         mcp_servers=config.tools.mcp_servers,
         channels_config=config.channels,
+        edictum_config=edictum_config,
     )
     
     # Set cron callback (needs agent)
@@ -457,6 +470,17 @@ def agent(
     else:
         logger.disable("nanobot")
     
+    edictum_config = None
+    if config.edictum.enabled:
+        edictum_config = {
+            "mode": config.edictum.mode,
+            "template": config.edictum.template,
+            "contract_path": config.edictum.contract_path,
+            "server_url": config.edictum.server_url,
+            "api_key": config.edictum.api_key,
+            "agent_id": config.edictum.agent_id,
+        }
+
     agent_loop = AgentLoop(
         bus=bus,
         provider=provider,
@@ -472,8 +496,9 @@ def agent(
         restrict_to_workspace=config.tools.restrict_to_workspace,
         mcp_servers=config.tools.mcp_servers,
         channels_config=config.channels,
+        edictum_config=edictum_config,
     )
-    
+
     # Show spinner when logs are off (no output to miss); skip when logs are on
     def _thinking_ctx():
         if logs:
@@ -948,6 +973,17 @@ def cron_run(
     config = load_config()
     provider = _make_provider(config)
     bus = MessageBus()
+    edictum_config = None
+    if config.edictum.enabled:
+        edictum_config = {
+            "mode": config.edictum.mode,
+            "template": config.edictum.template,
+            "contract_path": config.edictum.contract_path,
+            "server_url": config.edictum.server_url,
+            "api_key": config.edictum.api_key,
+            "agent_id": config.edictum.agent_id,
+        }
+
     agent_loop = AgentLoop(
         bus=bus,
         provider=provider,
@@ -962,6 +998,7 @@ def cron_run(
         restrict_to_workspace=config.tools.restrict_to_workspace,
         mcp_servers=config.tools.mcp_servers,
         channels_config=config.channels,
+        edictum_config=edictum_config,
     )
 
     store_path = get_data_dir() / "cron" / "jobs.json"

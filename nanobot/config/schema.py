@@ -274,6 +274,18 @@ class ToolsConfig(Base):
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
 
 
+class EdictumConfig(Base):
+    """Edictum governance configuration."""
+
+    enabled: bool = False
+    mode: str = "enforce"  # enforce | observe
+    template: str = "nanobot-agent"  # Built-in template name
+    contract_path: str | None = None  # Custom YAML contract file (overrides template)
+    server_url: str | None = None  # edictum-server URL for HITL + audit
+    api_key: str | None = None  # API key for edictum-server
+    agent_id: str = "nanobot"  # Agent identifier
+
+
 class Config(BaseSettings):
     """Root configuration for nanobot."""
 
@@ -282,6 +294,7 @@ class Config(BaseSettings):
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
+    edictum: EdictumConfig = Field(default_factory=EdictumConfig)
 
     @property
     def workspace_path(self) -> Path:
