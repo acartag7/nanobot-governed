@@ -49,6 +49,7 @@ class SubagentManager:
         self.exec_config = exec_config or ExecToolConfig()
         self.restrict_to_workspace = restrict_to_workspace
         self._running_tasks: dict[str, asyncio.Task[None]] = {}
+        self._governed_tools = None  # Set by AgentLoop when governance is active
     
     async def spawn(
         self,
@@ -114,7 +115,11 @@ class SubagentManager:
             ))
             tools.register(WebSearchTool(api_key=self.brave_api_key))
             tools.register(WebFetchTool())
-            
+
+            # Propagate governance from parent if available
+            if self._governed_tools is not None:
+                tools = self._governed_tools.for_subagent(inner=tools)
+
             # Build messages with subagent-specific prompt
             system_prompt = self._build_subagent_prompt(task)
             messages: list[dict[str, Any]] = [

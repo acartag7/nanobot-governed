@@ -60,6 +60,7 @@ class AgentLoop:
         session_manager: SessionManager | None = None,
         mcp_servers: dict | None = None,
         channels_config: ChannelsConfig | None = None,
+        edictum_config: dict | None = None,
     ):
         from nanobot.config.schema import ExecToolConfig
         self.bus = bus
@@ -100,6 +101,21 @@ class AgentLoop:
         self._consolidation_tasks: set[asyncio.Task] = set()  # Strong refs to in-flight tasks
         self._consolidation_locks: dict[str, asyncio.Lock] = {}
         self._register_default_tools()
+
+        # Wrap with edictum governance if configured
+        if edictum_config:
+            from nanobot.agent.governance import create_governed_registry
+
+            self.tools = create_governed_registry(
+                self.tools,
+                contract_path=edictum_config.get("contract_path"),
+                template=edictum_config.get("template", "nanobot-agent"),
+                server_url=edictum_config.get("server_url"),
+                api_key=edictum_config.get("api_key"),
+                agent_id=edictum_config.get("agent_id", "nanobot"),
+                mode=edictum_config.get("mode", "enforce"),
+            )
+            self.subagents._governed_tools = self.tools
 
     def _register_default_tools(self) -> None:
         """Register the default set of tools."""
@@ -378,6 +394,12 @@ class AgentLoop:
 
             _task = asyncio.create_task(_consolidate_and_unlock())
             self._consolidation_tasks.add(_task)
+
+        # Set governance principal from message sender
+        if hasattr(self.tools, "set_principal"):
+            from nanobot.agent.governance import principal_from_message
+
+            self.tools.set_principal(principal_from_message(msg))
 
         self._set_tool_context(msg.channel, msg.chat_id, msg.metadata.get("message_id"))
         if message_tool := self.tools.get("message"):
