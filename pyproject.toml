@@ -46,7 +46,7 @@ dependencies = [
 
 [project.optional-dependencies]
 governance = [
-    "edictum[server,yaml]>=0.10.0",
+    "edictum[server,yaml]>=0.11.1",
 ]
 dev = [
     "pytest>=9.0.0,<10.0.0",
