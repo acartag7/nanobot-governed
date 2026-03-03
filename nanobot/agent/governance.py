@@ -144,48 +144,67 @@ def create_governed_registry(
     agent_id: str = "nanobot",
     mode: str = "enforce",
 ) -> GovernedToolRegistry:
-    """Factory function to create a GovernedToolRegistry with edictum config.
+    """Factory for local-only governance (no server connection).
 
-    Two modes:
-    1. Local: Load contracts from YAML file or template (no server needed)
-    2. Server: Connect to edictum-server for approval queue + audit
+    Use create_governed_registry_from_server() for server-connected mode.
     """
     if not HAS_EDICTUM:
         raise ImportError(
             "edictum is not installed. Install with: pip install 'nanobot-ai[governance]'"
         )
 
-    approval_backend = None
-    audit_sink = None
-
-    if server_url and api_key:
-        from edictum.server import (
-            EdictumServerClient,
-            ServerApprovalBackend,
-            ServerAuditSink,
-        )
-
-        client = EdictumServerClient(
-            base_url=server_url,
-            api_key=api_key,
-            agent_id=agent_id,
-        )
-        approval_backend = ServerApprovalBackend(client)
-        audit_sink = ServerAuditSink(client)
-
     if contract_path:
-        guard = Edictum.from_yaml(
-            contract_path,
-            mode=mode,
-            approval_backend=approval_backend,
-            audit_sink=audit_sink,
-        )
+        guard = Edictum.from_yaml(contract_path, mode=mode)
     else:
-        guard = Edictum.from_template(
-            template,
-            mode=mode,
-            approval_backend=approval_backend,
-            audit_sink=audit_sink,
-        )
+        guard = Edictum.from_template(template, mode=mode)
 
     return GovernedToolRegistry(inner=inner, guard=guard)
+
+
+async def create_governed_registry_from_server(
+    inner: "ToolRegistry",
+    *,
+    server_url: str,
+    api_key: str,
+    agent_id: str = "nanobot",
+    mode: str = "enforce",
+    contract_path: str | None = None,
+    template: str = "nanobot-agent",
+) -> GovernedToolRegistry:
+    """Factory for server-connected governance using Edictum.from_server().
+
+    Connects to edictum-console, fetches contracts, sets up SSE auto-reload,
+    and wires audit + approval backends.
+
+    Falls back to local contracts if server connection fails.
+    """
+    if not HAS_EDICTUM:
+        raise ImportError(
+            "edictum is not installed. Install with: pip install 'nanobot-ai[governance]'"
+        )
+
+    try:
+        guard = await Edictum.from_server(
+            url=server_url,
+            api_key=api_key,
+            agent_id=agent_id,
+            mode=mode,
+            auto_watch=True,
+        )
+        logger.info(
+            "Edictum connected to server %s (agent=%s, mode=%s)",
+            server_url, agent_id, mode,
+        )
+        return GovernedToolRegistry(inner=inner, guard=guard)
+    except Exception:
+        logger.warning(
+            "Failed to connect to edictum server %s, falling back to local contracts",
+            server_url,
+            exc_info=True,
+        )
+        return create_governed_registry(
+            inner,
+            contract_path=contract_path,
+            template=template,
+            mode=mode,
+        )
