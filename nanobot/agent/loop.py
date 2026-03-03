@@ -274,6 +274,7 @@ class AgentLoop:
                 server_url=server_url,
                 api_key=api_key,
                 agent_id=self._edictum_config.get("agent_id", "nanobot"),
+                bundle_name=self._edictum_config.get("bundle_name", "default"),
                 mode=self._edictum_config.get("mode", "enforce"),
                 contract_path=self._edictum_config.get("contract_path"),
                 template=self._edictum_config.get("template", "nanobot-agent"),

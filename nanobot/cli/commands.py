@@ -282,6 +282,7 @@ def gateway(
             "server_url": config.edictum.server_url,
             "api_key": config.edictum.api_key,
             "agent_id": config.edictum.agent_id,
+            "bundle_name": config.edictum.bundle_name,
         }
 
     # Create agent with cron service
@@ -468,6 +469,7 @@ def agent(
             "server_url": config.edictum.server_url,
             "api_key": config.edictum.api_key,
             "agent_id": config.edictum.agent_id,
+            "bundle_name": config.edictum.bundle_name,
         }
 
     agent_loop = AgentLoop(
@@ -975,6 +977,7 @@ def cron_run(
             "server_url": config.edictum.server_url,
             "api_key": config.edictum.api_key,
             "agent_id": config.edictum.agent_id,
+            "bundle_name": config.edictum.bundle_name,
         }
 
     agent_loop = AgentLoop(

@@ -167,6 +167,7 @@ async def create_governed_registry_from_server(
     server_url: str,
     api_key: str,
     agent_id: str = "nanobot",
+    bundle_name: str = "default",
     mode: str = "enforce",
     contract_path: str | None = None,
     template: str = "nanobot-agent",
@@ -188,6 +189,7 @@ async def create_governed_registry_from_server(
             url=server_url,
             api_key=api_key,
             agent_id=agent_id,
+            bundle_name=bundle_name,
             mode=mode,
             auto_watch=True,
         )

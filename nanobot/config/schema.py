@@ -332,6 +332,7 @@ class EdictumConfig(Base):
     server_url: str | None = None  # edictum-server URL for HITL + audit
     api_key: str | None = None  # API key for edictum-server
     agent_id: str = "nanobot"  # Agent identifier
+    bundle_name: str = "default"  # Bundle lineage to track on server
 
 
 class Config(BaseSettings):
